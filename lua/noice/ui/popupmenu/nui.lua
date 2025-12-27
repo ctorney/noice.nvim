@@ -112,10 +112,32 @@ function M.opts(state)
     opts.relative = { type = "cursor" }
     local border = vim.tbl_get(opts, "border", "style")
     local offset = (border == nil or border == "none") and 0 or 1
-    opts.position = {
-      row = 1 + offset,
-      col = -padding.left,
-    }
+    
+    local row = vim.fn.winline()
+    local height = vim.fn.winheight(0)
+    
+    -- set win_heigt to number of items if auto or opt.size.height
+    local win_height = opts.size and opts.size.height and opts.size.height == "auto" and #state.items
+      or opts.size.height
+      or #state.items
+    -- restrict to max_height
+    win_height = opts.size and opts.size.max_height and math.min(win_height, opts.size.max_height) or win_height
+
+    -- switch to SW anchor if the popup window needs more than available space
+    if row + win_height > height then
+      opts.anchor = "SW"
+      opts.position = {
+        row = offset,
+        col = -padding.left,
+      }
+    else
+      opts.anchor = "NW"
+      opts.position = {
+        row = 1 + offset,
+        col = -padding.left,
+      }
+    end
+
   end
 
   -- manage left/right padding on the line
